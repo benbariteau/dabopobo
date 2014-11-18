@@ -45,7 +45,7 @@ func (k karmas) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	text := r.Form.Get("text")
 	matches := regex.FindAllStringSubmatch(text, -1)
 	karma := getkarma.FindStringSubmatch(text)
-	if matches != nil {
+	if matches != nil && r.Form.Get("user_name") != "slackbot" {
 		for _, match := range matches {
 			key := match[1]
 			op := match[2]
