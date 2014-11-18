@@ -8,10 +8,24 @@ import (
 )
 
 type karmas struct {
-	karmaMap *map[string]int
+	karmaMap *map[string]karmaSet
 }
 
-var regex = regexp.MustCompile("([^ ]+)\\+\\+")
+type karmaSet struct {
+	plusplus   int
+	minusminus int
+	plusminus  int
+}
+
+func (k karmaSet) value() int {
+	return k.plusplus - k.minusminus
+}
+
+func (k karmaSet) String() string {
+	return fmt.Sprintf("(%v++,%v--,%v+-)", k.plusplus, k.minusminus, k.plusminus)
+}
+
+var regex = regexp.MustCompile("([^ ]+)(\\+\\+|--|\\+-|-\\+)")
 var getkarma = regexp.MustCompile("^!karma +([^ ]+)")
 
 func main() {
@@ -22,7 +36,7 @@ func main() {
 }
 
 func newKarmas() karmas {
-	m := make(map[string]int)
+	m := make(map[string]karmaSet)
 	return karmas{&m}
 }
 
@@ -34,8 +48,18 @@ func (k karmas) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if matches != nil {
 		for _, match := range matches {
 			key := match[1]
+			op := match[2]
+			set := (*k.karmaMap)[key]
 			if key != "" {
-				(*k.karmaMap)[key]++
+				switch op {
+				case "--":
+					set.minusminus++
+				case "++":
+					set.plusplus++
+				case "-+", "+-":
+					set.plusminus++
+				}
+				(*k.karmaMap)[key] = set
 			}
 		}
 		fmt.Println(*k.karmaMap)
@@ -43,8 +67,10 @@ func (k karmas) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		name := karma[1]
 		fmt.Println("asking for", name)
 		res := make(map[string]string)
-		res["text"] = fmt.Sprintf("%v: %v", r.Form.Get("user_name"), (*k.karmaMap)[name])
+		karmaset := (*k.karmaMap)[name]
+		res["text"] = fmt.Sprintf("%v: %v %v", r.Form.Get("user_name"), karmaset.value(), karmaset)
 		res["parse"] = "full"
+		res["username"] = "dabopobo"
 		resp, _ := json.Marshal(res)
 		fmt.Println(string(resp))
 		w.WriteHeader(200)
