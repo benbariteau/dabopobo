@@ -4,17 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
+	"strconv"
+
+	"github.com/xuyu/goredis"
 )
 
-type karmas struct {
-	karmaMap *map[string]karmaSet
+type state struct {
+	redis *goredis.Redis
 }
 
 type karmaSet struct {
-	plusplus   int
-	minusminus int
-	plusminus  int
+	plusplus    int
+	minusminus  int
+	plusminus   int
+	minusequals int
+	plusequals  int
 }
 
 func (k karmaSet) value() int {
@@ -22,53 +28,60 @@ func (k karmaSet) value() int {
 }
 
 func (k karmaSet) String() string {
-	return fmt.Sprintf("(%v++,%v--,%v+-)", k.plusplus, k.minusminus, k.plusminus)
+	return fmt.Sprintf("(%v++,%v--,%v+-,%v+=,%v-=)", k.plusplus, k.minusminus, k.plusminus, k.plusequals, k.minusequals)
 }
 
-var regex = regexp.MustCompile("([^ ]+)(\\+\\+|--|\\+-|-\\+)")
+var indentifierRegex = regexp.MustCompile("([^ ]+)(\\+\\+|--|\\+-|-\\+|-=|\\+=)")
 var getkarma = regexp.MustCompile("^!karma +([^ ]+)")
 
 func main() {
-	k := newKarmas()
-	http.Handle("/", k)
+	redis, err := goredis.Dial(&goredis.DialConfig{Address: "127.0.0.1:6379"})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	s := state{redis}
+	http.Handle("/", s)
 
 	http.ListenAndServe(":8080", nil)
 }
 
-func newKarmas() karmas {
-	m := make(map[string]karmaSet)
-	return karmas{&m}
-}
-
-func (k karmas) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s state) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	text := r.Form.Get("text")
-	matches := regex.FindAllStringSubmatch(text, -1)
+	indentifierMatches := indentifierRegex.FindAllStringSubmatch(text, -1)
 	karma := getkarma.FindStringSubmatch(text)
-	if matches != nil && r.Form.Get("user_name") != "slackbot" {
-		for _, match := range matches {
+	username := r.Form.Get("user_name")
+	if indentifierMatches != nil && username != "slackbot" {
+		for _, match := range indentifierMatches {
 			key := match[1]
 			op := match[2]
-			set := (*k.karmaMap)[key]
-			if key != "" {
+			if key != "" && key != username {
+				var err error
 				switch op {
 				case "--":
-					set.minusminus++
+					_, err = s.redis.Incr(key + "--")
 				case "++":
-					set.plusplus++
+					_, err = s.redis.Incr(key + "++")
 				case "-+", "+-":
-					set.plusminus++
+					_, err = s.redis.Incr(key + "+-")
+				case "+=":
+					_, err = s.redis.Incr(key + "+=")
+				case "-=":
+					_, err = s.redis.Incr(key + "-=")
 				}
-				(*k.karmaMap)[key] = set
+				fmt.Fprintln(os.Stderr, err)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
-		fmt.Println(*k.karmaMap)
 	} else if karma != nil {
 		name := karma[1]
 		fmt.Println("asking for", name)
 		res := make(map[string]string)
-		karmaset := (*k.karmaMap)[name]
-		res["text"] = fmt.Sprintf("%v: %v %v", r.Form.Get("user_name"), karmaset.value(), karmaset)
+		karmaset := s.getKarmaSet(name)
+		res["text"] = fmt.Sprintf("%v's karma is %v %v", name, karmaset.value(), karmaset)
 		res["parse"] = "full"
 		res["username"] = "dabopobo"
 		resp, _ := json.Marshal(res)
@@ -76,4 +89,27 @@ func (k karmas) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Write(resp)
 	}
+}
+
+func (s state) getKarmaSet(name string) (k karmaSet) {
+	k.plusplus = getRedisInt(s.redis, name+"++", 0)
+	k.minusminus = getRedisInt(s.redis, name+"--", 0)
+	k.plusminus = getRedisInt(s.redis, name+"+-", 0)
+	k.plusequals = getRedisInt(s.redis, name+"+=", 0)
+	k.minusequals = getRedisInt(s.redis, name+"-=", 0)
+	return
+}
+
+func getRedisInt(r *goredis.Redis, key string, def int) int {
+	val, err := r.Get(key)
+	if err != nil {
+		return def
+	}
+
+	value, err := strconv.Atoi(string(val))
+	if err != nil {
+		return def
+	}
+
+	return value
 }
