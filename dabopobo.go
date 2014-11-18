@@ -28,10 +28,10 @@ func (k karmaSet) value() int {
 }
 
 func (k karmaSet) String() string {
-	return fmt.Sprintf("(%v++,%v--,%v+-,%v+=,%v-=)", k.plusplus, k.minusminus, k.plusminus, k.plusequals, k.minusequals)
+	return fmt.Sprintf("(%v++,%v--,%v+-)", k.plusplus, k.minusminus, k.plusminus)
 }
 
-var indentifierRegex = regexp.MustCompile("([^ ]+)(\\+\\+|--|\\+-|-\\+|-=|\\+=)")
+var indentifierRegex = regexp.MustCompile("([^ ]+)(\\+\\+|--|\\+-|-\\+)")
 var getkarma = regexp.MustCompile("^!karma +([^ ]+)")
 
 func main() {
@@ -65,10 +65,6 @@ func (s state) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					_, err = s.redis.Incr(key + "++")
 				case "-+", "+-":
 					_, err = s.redis.Incr(key + "+-")
-				case "+=":
-					_, err = s.redis.Incr(key + "+=")
-				case "-=":
-					_, err = s.redis.Incr(key + "-=")
 				}
 				fmt.Fprintln(os.Stderr, err)
 				if err != nil {
@@ -95,8 +91,6 @@ func (s state) getKarmaSet(name string) (k karmaSet) {
 	k.plusplus = getRedisInt(s.redis, name+"++", 0)
 	k.minusminus = getRedisInt(s.redis, name+"--", 0)
 	k.plusminus = getRedisInt(s.redis, name+"+-", 0)
-	k.plusequals = getRedisInt(s.redis, name+"+=", 0)
-	k.minusequals = getRedisInt(s.redis, name+"-=", 0)
 	return
 }
 
