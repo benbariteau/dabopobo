@@ -17,11 +17,9 @@ type state struct {
 }
 
 type karmaSet struct {
-	plusplus    int
-	minusminus  int
-	plusminus   int
-	minusequals int
-	plusequals  int
+	plusplus   int
+	minusminus int
+	plusminus  int
 }
 
 func (k karmaSet) value() int {
@@ -39,7 +37,7 @@ func main() {
 	redis, err := goredis.Dial(&goredis.DialConfig{Address: "127.0.0.1:6379"})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return
+		os.Exit(1)
 	}
 	s := state{redis}
 	http.Handle("/", s)
