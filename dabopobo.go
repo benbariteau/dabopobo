@@ -12,7 +12,8 @@ import (
 )
 
 type serverConfig struct {
-	redis *goredis.Redis
+	redis    *goredis.Redis
+	commands []cmd
 }
 
 func (s serverConfig) incr(key string) error {
@@ -68,7 +69,13 @@ func serve() error {
 	if err != nil {
 		return err
 	}
-	s := serverConfig{redis}
+	s := serverConfig{
+		redis,
+		[]cmd{
+			cmd{"^!karma +([^ ]+)", getKarma},
+			cmd{"([^ ]+)(\\+\\+|--|\\+-|-\\+)", mutateKarma},
+		},
+	}
 
 	http.Handle("/", s)
 
@@ -78,19 +85,21 @@ func serve() error {
 func (s serverConfig) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	text := r.Form.Get("text")
-	indentifierMatches := indentifierRegex.FindAllStringSubmatch(text, -1)
-	karma := getkarma.FindAllStringSubmatch(text, -1)
 	username := r.Form.Get("user_name")
-	if karma != nil {
-		resp, err := getKarma(s, karma, username)
+	for _, command := range s.commands {
+		r := regexp.MustCompile(command.regex)
+		matches := r.FindAllStringSubmatch(text, -1)
+		if matches == nil {
+			continue
+		}
+		response, err := command.handler(s, matches, username)
+
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
-		w.Write(resp)
-	} else if indentifierMatches != nil && username != "slackbot" {
-		_, err := mutateKarma(s, indentifierMatches, username)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+
+		if len(response) > 0 {
+			w.Write(response)
 		}
 	}
 }

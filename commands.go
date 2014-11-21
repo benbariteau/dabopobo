@@ -12,8 +12,11 @@ type model interface {
 }
 
 type cmd struct {
-	regex string
+	regex   string
+	handler commandHandler
 }
+
+type commandHandler func(m model, mutations [][]string, username string) (response []byte, err error)
 
 func mutateKarma(m model, mutations [][]string, username string) (b []byte, err error) {
 	if username == "slackbot" {
