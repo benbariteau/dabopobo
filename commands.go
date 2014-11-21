@@ -16,7 +16,16 @@ type cmd struct {
 	handler commandHandler
 }
 
-type commandHandler func(m model, mutations [][]string, username string) (response []byte, err error)
+/*
+A commandHandler is a function that handles a dabopobo command and returns a slice of bytes to respond with and possibly an error.
+
+m is the data model for this process.
+submatches is the output of FindAllStringSubmatch() when running the message text on the corresponding cmd's regex.
+username is the username of the user who sent the message.
+response is the response to be sent back to slack.
+err is non-nil if an error is produced. response should be empty in this case.
+*/
+type commandHandler func(m model, submatches [][]string, username string) (response []byte, err error)
 
 func mutateKarma(m model, mutations [][]string, username string) (b []byte, err error) {
 	if username == "slackbot" {
