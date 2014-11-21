@@ -27,11 +27,13 @@ func mutateKarma(m model, mutations [][]string, username string) (b []byte, err 
 		op := mutation[2]
 		if identifier != "" && identifier != username { //users may not mutate themselves
 			suffix := canonicalizeSuffix(op)
-			err = m.incr(strings.ToLower(identifier) + suffix)
+			key := strings.ToLower(identifier) + suffix
+			err = m.incr(key)
 			if err != nil {
 				err = nil
 				return
 			}
+			fmt.Println(key)
 		}
 	}
 	return
@@ -39,14 +41,15 @@ func mutateKarma(m model, mutations [][]string, username string) (b []byte, err 
 
 func getKarma(m model, identifier [][]string, username string) (response []byte, err error) {
 	name := identifier[0][1]
-	fmt.Println("asking for", name)
 	karmaset := getKarmaSet(m, name)
+	text := fmt.Sprintf("%v's karma is %v %v", name, karmaset.value(), karmaset)
 	res := map[string]string{
-		"text":     fmt.Sprintf("%v's karma is %v %v", name, karmaset.value(), karmaset),
+		"text":     text,
 		"parse":    "full",
 		"username": "dabopobo",
 	}
 	response, err = json.Marshal(res)
+	fmt.Println(text)
 	return
 }
 
