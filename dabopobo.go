@@ -17,6 +17,11 @@ type serverConfig struct {
 	redis *goredis.Redis
 }
 
+func (s serverConfig) incr(key string) error {
+	_, err := s.redis.Incr(key)
+	return err
+}
+
 type karmaSet struct {
 	plusplus   int
 	minusminus int
@@ -81,14 +86,9 @@ func (s serverConfig) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Write(resp)
 	} else if indentifierMatches != nil && username != "slackbot" {
-		for _, match := range indentifierMatches {
-			key := match[1]
-			op := match[2]
-			if key != "" && key != username {
-				suffix := canonicalizeSuffix(op)
-				_, err := s.redis.Incr(strings.ToLower(key) + suffix)
-				fmt.Fprintln(os.Stderr, err)
-			}
+		err := mutateKarma(s, indentifierMatches, username)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
 		}
 	}
 }
