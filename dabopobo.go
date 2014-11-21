@@ -13,7 +13,7 @@ import (
 	"github.com/xuyu/goredis"
 )
 
-type state struct {
+type serverConfig struct {
 	redis *goredis.Redis
 }
 
@@ -39,22 +39,26 @@ var port = flag.Int("port", 8080, "port")
 
 func main() {
 	flag.Parse()
-	redis, err := goredis.Dial(&goredis.DialConfig{Address: fmt.Sprintf("127.0.0.1:%v", *redisPort)})
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	s := state{redis}
-	http.Handle("/", s)
-
-	err = http.ListenAndServe(fmt.Sprintf(":%v", *port), nil)
+	err := serve()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func (s state) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func serve() error {
+	redis, err := goredis.Dial(&goredis.DialConfig{Address: fmt.Sprintf("127.0.0.1:%v", *redisPort)})
+	if err != nil {
+		return err
+	}
+	s := serverConfig{redis}
+
+	http.Handle("/", s)
+
+	return http.ListenAndServe(fmt.Sprintf(":%v", *port), nil)
+}
+
+func (s serverConfig) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	text := r.Form.Get("text")
 	indentifierMatches := indentifierRegex.FindAllStringSubmatch(text, -1)
@@ -100,7 +104,7 @@ func canonicalizeSuffix(suffix string) string {
 	}
 }
 
-func (s state) getKarmaSet(name string) (k karmaSet) {
+func (s serverConfig) getKarmaSet(name string) (k karmaSet) {
 	name = strings.ToLower(name)
 	k.plusplus = getRedisInt(s.redis, name+"++", 0)
 	k.minusminus = getRedisInt(s.redis, name+"--", 0)
