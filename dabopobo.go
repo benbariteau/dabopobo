@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -33,8 +34,12 @@ func (k karmaSet) String() string {
 var indentifierRegex = regexp.MustCompile("([^ ]+)(\\+\\+|--|\\+-|-\\+)")
 var getkarma = regexp.MustCompile("^!karma +([^ ]+)")
 
+var redisPort = flag.Int("redisport", 6379, "redis port")
+var port = flag.Int("port", 8080, "port")
+
 func main() {
-	redis, err := goredis.Dial(&goredis.DialConfig{Address: "127.0.0.1:6379"})
+	flag.Parse()
+	redis, err := goredis.Dial(&goredis.DialConfig{Address: fmt.Sprintf("127.0.0.1:%v", *redisPort)})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -42,7 +47,11 @@ func main() {
 	s := state{redis}
 	http.Handle("/", s)
 
-	http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(fmt.Sprintf(":%v", *port), nil)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 func (s state) ServeHTTP(w http.ResponseWriter, r *http.Request) {
