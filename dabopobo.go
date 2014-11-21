@@ -10,23 +10,6 @@ import (
 	"github.com/xuyu/goredis"
 )
 
-type karmaSet struct {
-	plusplus   int
-	minusminus int
-	plusminus  int
-}
-
-func (k karmaSet) value() int {
-	return k.plusplus - k.minusminus
-}
-
-func (k karmaSet) String() string {
-	return fmt.Sprintf("(%v++,%v--,%v+-)", k.plusplus, k.minusminus, k.plusminus)
-}
-
-var indentifierRegex = regexp.MustCompile("([^ ]+)(\\+\\+|--|\\+-|-\\+)")
-var getkarma = regexp.MustCompile("^!karma +([^ ]+)")
-
 var redisPort = flag.Int("redisport", 6379, "redis port")
 var port = flag.Int("port", 8080, "port")
 
