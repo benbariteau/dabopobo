@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/xuyu/goredis"
 )
@@ -20,6 +18,20 @@ type serverConfig struct {
 func (s serverConfig) incr(key string) error {
 	_, err := s.redis.Incr(key)
 	return err
+}
+
+func (s serverConfig) getInt(key string) int {
+	val, err := s.redis.Get(key)
+	if err != nil {
+		return 0
+	}
+
+	value, err := strconv.Atoi(string(val))
+	if err != nil {
+		return 0
+	}
+
+	return value
 }
 
 type karmaSet struct {
@@ -67,26 +79,16 @@ func (s serverConfig) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	text := r.Form.Get("text")
 	indentifierMatches := indentifierRegex.FindAllStringSubmatch(text, -1)
-	karma := getkarma.FindStringSubmatch(text)
+	karma := getkarma.FindAllStringSubmatch(text, -1)
 	username := r.Form.Get("user_name")
 	if karma != nil {
-		name := karma[1]
-		fmt.Println("asking for", name)
-		res := make(map[string]string)
-		karmaset := s.getKarmaSet(name)
-		fmt.Println(karmaset)
-		res["text"] = fmt.Sprintf("%v's karma is %v %v", name, karmaset.value(), karmaset)
-		res["parse"] = "full"
-		res["username"] = "dabopobo"
-		resp, err := json.Marshal(res)
+		resp, err := getKarma(s, karma, username)
 		if err != nil {
-			panic(err)
+			fmt.Fprintln(os.Stderr, err)
 		}
-		fmt.Println(string(resp))
-		w.WriteHeader(200)
 		w.Write(resp)
 	} else if indentifierMatches != nil && username != "slackbot" {
-		err := mutateKarma(s, indentifierMatches, username)
+		_, err := mutateKarma(s, indentifierMatches, username)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
@@ -102,26 +104,4 @@ func canonicalizeSuffix(suffix string) string {
 	default:
 		return suffix
 	}
-}
-
-func (s serverConfig) getKarmaSet(name string) (k karmaSet) {
-	name = strings.ToLower(name)
-	k.plusplus = getRedisInt(s.redis, name+"++", 0)
-	k.minusminus = getRedisInt(s.redis, name+"--", 0)
-	k.plusminus = getRedisInt(s.redis, name+"+-", 0)
-	return
-}
-
-func getRedisInt(r *goredis.Redis, key string, def int) int {
-	val, err := r.Get(key)
-	if err != nil {
-		return def
-	}
-
-	value, err := strconv.Atoi(string(val))
-	if err != nil {
-		return def
-	}
-
-	return value
 }
