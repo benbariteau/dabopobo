@@ -28,7 +28,7 @@ err is non-nil if an error is produced. response should be empty in this case.
 */
 type commandHandler func(m model, submatches [][]string, username string) (response []byte, err error)
 
-var mutateKarmaCmd = cmd{"([^ ]+)(\\+\\+|--|\\+-|-\\+)", mutateKarma}
+var mutateKarmaCmd = cmd{"(\\(.+\\)|[^ ]+?)(\\+\\++|--+|\\+-|-\\+)", mutateKarma}
 
 //handles identifier++
 func mutateKarma(m model, mutations [][]string, username string) (b []byte, err error) {
@@ -36,7 +36,7 @@ func mutateKarma(m model, mutations [][]string, username string) (b []byte, err 
 		return
 	}
 	for _, mutation := range mutations {
-		identifier := mutation[1]
+		identifier := maybeRemoveParens(mutation[1])
 		op := mutation[2]
 		if identifier != "" && identifier != username { // users may not mutate themselves
 			suffix := canonicalizeSuffix(op)
@@ -52,7 +52,7 @@ func mutateKarma(m model, mutations [][]string, username string) (b []byte, err 
 	return
 }
 
-var getKarmaCmd = cmd{"^!karma +([^ ]+)", getKarma}
+var getKarmaCmd = cmd{"^!karma +([^ ].+)", getKarma}
 
 //handles !karma identifier
 func getKarma(m model, identifier [][]string, username string) (response []byte, err error) {
