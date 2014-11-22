@@ -31,6 +31,9 @@ func (s serverConfig) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	text := r.Form.Get("text")
 	username := r.Form.Get("user_name")
+
+	// process commands in order so that there is an order of precedence
+	// this is to prevent mutation on query, for example
 	for _, command := range s.commands {
 		r := regexp.MustCompile(command.regex)
 		matches := r.FindAllStringSubmatch(text, -1)

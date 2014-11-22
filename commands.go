@@ -28,6 +28,7 @@ err is non-nil if an error is produced. response should be empty in this case.
 */
 type commandHandler func(m model, submatches [][]string, username string) (response []byte, err error)
 
+//handles identifier++
 func mutateKarma(m model, mutations [][]string, username string) (b []byte, err error) {
 	if username == "slackbot" { // ignore if message is from the bot
 		return
@@ -49,6 +50,7 @@ func mutateKarma(m model, mutations [][]string, username string) (b []byte, err 
 	return
 }
 
+//handles !karma identifier
 func getKarma(m model, identifier [][]string, username string) (response []byte, err error) {
 	name := identifier[0][1] //since the regex has a beginning of string hook, there should only be one match, so we only care about index 0.
 	karmaset := getKarmaSet(m, name)
