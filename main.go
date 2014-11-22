@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-var redisPort = flag.Uint("redisport", 6379, "redis port")
+var redisPort = flag.Uint("redisport", 6379, "redis backend port")
 var port = flag.Uint("port", 8080, "port")
 
 func main() {
