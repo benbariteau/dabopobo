@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -18,7 +19,8 @@ func serve(port uint16, redisPort uint16) error {
 		redis,
 		[]cmd{
 			getKarmaCmd,
-			mutateKarmaCmd,
+			helpCmd,        // must be after getKarma since its regex matches anything that getKarma's does
+			mutateKarmaCmd, // must be after getKarma because getKarma could be given an identifier that matches
 		},
 	}
 
@@ -40,7 +42,16 @@ func (s serverConfig) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if matches == nil {
 			continue
 		}
-		response, err := command.handler(s, matches, username)
+		text, err := command.handler(s, matches, username)
+		var response []byte
+		if text != "" {
+			res := map[string]string{
+				"text":     text,
+				"parse":    "full",     // allows the user to be pinged
+				"username": "dabopobo", // so IRC users don't some weird thing because slack
+			}
+			response, err = json.Marshal(res)
+		}
 
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)

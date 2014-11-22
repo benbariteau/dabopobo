@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -26,12 +25,12 @@ username is the username of the user who sent the message.
 response is the response to be sent back to slack.
 err is non-nil if an error is produced. response should be empty in this case.
 */
-type commandHandler func(m model, submatches [][]string, username string) (response []byte, err error)
+type commandHandler func(m model, submatches [][]string, username string) (response string, err error)
 
 var mutateKarmaCmd = cmd{"(\\(.+\\)|[^ ]+?)(\\+\\++|--+|\\+-|-\\+)", mutateKarma}
 
 //handles identifier++
-func mutateKarma(m model, mutations [][]string, username string) (b []byte, err error) {
+func mutateKarma(m model, mutations [][]string, username string) (s string, err error) {
 	if username == "slackbot" { // ignore if message is from the bot
 		return
 	}
@@ -55,18 +54,28 @@ func mutateKarma(m model, mutations [][]string, username string) (b []byte, err 
 var getKarmaCmd = cmd{"^!karma +([^ ].+)", getKarma}
 
 //handles !karma identifier
-func getKarma(m model, identifier [][]string, username string) (response []byte, err error) {
+func getKarma(m model, identifier [][]string, username string) (text string, err error) {
 	name := identifier[0][1] //since the regex has a beginning of string hook, there should only be one match, so we only care about index 0.
 	karmaset := getKarmaSet(m, name)
-	text := fmt.Sprintf("%v's karma is %v %v", name, karmaset.value(), karmaset)
-	res := map[string]string{
-		"text":     text,
-		"parse":    "full",     // allows the user to be pinged
-		"username": "dabopobo", // so IRC users don't some weird thing because slack
-	}
-	response, err = json.Marshal(res)
+	text = fmt.Sprintf("%v's karma is %v %v", name, karmaset.value(), karmaset)
 	fmt.Println(text)
 	return
+}
+
+var helpCmd = cmd{"^!karma(|help)$", help}
+
+func help(m model, s [][]string, u string) (string, error) {
+	fmt.Println("help message")
+	return strings.Join(
+		[]string{
+			"\"!karma thing\" displays things karma. It can be anything, including with spaces.",
+			"thing++ (with at least 2 pluses) gives positive karma",
+			"thing-- (with at least 2 minuses) gives negative karma",
+			"thing+- (either order) gives neutral karma",
+			"(thing with spaces)++ (with any of the above) gives karma to a thing with spaces in it.",
+		},
+		"\n",
+	), nil
 }
 
 // getKarmaSet loads the karma for a given key
