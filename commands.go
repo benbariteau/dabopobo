@@ -7,10 +7,11 @@ import (
 )
 
 type model interface {
-	incr(string) error
-	getInt(string) int
+	incr(key string) error //increment the given key, setting it to zero if it doesn't exist
+	getInt(key string) int //get a key as an int, defaulting to 0 if it doesn't exist
 }
 
+// a dabopobo command, consisting of a regex to match against and a commandHandler to run if it matches
 type cmd struct {
 	regex   string
 	handler commandHandler
@@ -28,15 +29,15 @@ err is non-nil if an error is produced. response should be empty in this case.
 type commandHandler func(m model, submatches [][]string, username string) (response []byte, err error)
 
 func mutateKarma(m model, mutations [][]string, username string) (b []byte, err error) {
-	if username == "slackbot" {
+	if username == "slackbot" { // ignore if message is from the bot
 		return
 	}
 	for _, mutation := range mutations {
 		identifier := mutation[1]
 		op := mutation[2]
-		if identifier != "" && identifier != username { //users may not mutate themselves
+		if identifier != "" && identifier != username { // users may not mutate themselves
 			suffix := canonicalizeSuffix(op)
-			key := strings.ToLower(identifier) + suffix
+			key := strings.ToLower(identifier) + suffix // canonicalize identifier as lowercase to prevent confusion
 			err = m.incr(key)
 			if err != nil {
 				err = nil
@@ -49,19 +50,20 @@ func mutateKarma(m model, mutations [][]string, username string) (b []byte, err 
 }
 
 func getKarma(m model, identifier [][]string, username string) (response []byte, err error) {
-	name := identifier[0][1]
+	name := identifier[0][1] //since the regex has a beginning of string hook, there should only be one match, so we only care about index 0.
 	karmaset := getKarmaSet(m, name)
 	text := fmt.Sprintf("%v's karma is %v %v", name, karmaset.value(), karmaset)
 	res := map[string]string{
 		"text":     text,
-		"parse":    "full",
-		"username": "dabopobo",
+		"parse":    "full",     // allows the user to be pinged
+		"username": "dabopobo", // so IRC users don't some weird thing because slack
 	}
 	response, err = json.Marshal(res)
 	fmt.Println(text)
 	return
 }
 
+// getKarmaSet loads the karma for a given key
 func getKarmaSet(m model, name string) (k karmaSet) {
 	name = strings.ToLower(name)
 	k.plusplus = m.getInt(name + "++")
