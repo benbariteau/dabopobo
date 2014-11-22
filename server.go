@@ -17,8 +17,8 @@ func serve(port uint16, redisPort uint16) error {
 	s := serverConfig{
 		redis,
 		[]cmd{
-			cmd{"^!karma +([^ ]+)", getKarma},
-			cmd{"([^ ]+)(\\+\\+|--|\\+-|-\\+)", mutateKarma},
+			getKarmaCmd,
+			mutateKarmaCmd,
 		},
 	}
 
