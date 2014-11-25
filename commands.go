@@ -68,11 +68,12 @@ func help(m model, s [][]string, u string) (string, error) {
 	fmt.Println("help message")
 	return strings.Join(
 		[]string{
-			"\"!karma thing\" displays things karma. It can be anything, including with spaces.",
-			"thing++ (with at least 2 pluses) gives positive karma",
-			"thing-- (with at least 2 minuses) gives negative karma",
-			"thing+- (either order) gives neutral karma",
-			"(thing with spaces)++ (with any of the above) gives karma to a thing with spaces in it.",
+			"!karma thing\tdisplays things karma. It can be anything, including with spaces.",
+			"thing++\t(with at least 2 pluses) gives positive karma",
+			"thing--\t(with at least 2 minuses) gives negative karma",
+			"thing+-\t(either order) gives neutral karma",
+			"(thing with spaces)++\t(with any of the above) gives karma to a thing with spaces in it.",
+			"!karma or !karmahelp\tdisplays this help",
 		},
 		"\n",
 	), nil
