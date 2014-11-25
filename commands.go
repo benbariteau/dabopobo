@@ -31,9 +31,6 @@ var mutateKarmaCmd = cmd{"(\\(.+\\)|[^ ]+?)(\\+\\++|--+|\\+-|-\\+)", mutateKarma
 
 //handles identifier++
 func mutateKarma(m model, mutations [][]string, username string) (s string, err error) {
-	if username == "slackbot" { // ignore if message is from the bot
-		return
-	}
 	for _, mutation := range mutations {
 		identifier := maybeRemoveParens(mutation[1])
 		op := mutation[2]
