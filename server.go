@@ -21,6 +21,7 @@ func serve(port uint16, redisPort uint16) error {
 			getKarmaCmd,
 			helpCmd,        // must be after getKarma since its regex matches anything that getKarma's does
 			mutateKarmaCmd, // must be after getKarma because getKarma could be given an identifier that matches
+			mentionedCmd,
 		},
 	}
 
@@ -33,6 +34,9 @@ func (s serverConfig) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	text := r.Form.Get("text")
 	username := r.Form.Get("user_name")
+	if username == "slackbot" { // ignore messages from bot(s)
+		return
+	}
 
 	// process commands in order so that there is an order of precedence
 	// this is to prevent mutation on query, for example

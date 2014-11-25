@@ -79,6 +79,12 @@ func help(m model, s [][]string, u string) (string, error) {
 	), nil
 }
 
+var mentionedCmd = cmd{"dabopobo", mentioned}
+
+func mentioned(m model, s [][]string, u string) (string, error) {
+	return "don't touch me", nil
+}
+
 // getKarmaSet loads the karma for a given key
 func getKarmaSet(m model, name string) (k karmaSet) {
 	name = strings.ToLower(name)
