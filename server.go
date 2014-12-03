@@ -10,8 +10,8 @@ import (
 	"github.com/xuyu/goredis"
 )
 
-func serve(port uint16, redisPort uint16) error {
-	redis, err := goredis.Dial(&goredis.DialConfig{Address: fmt.Sprintf("127.0.0.1:%v", redisPort)})
+func serve(port uint16, redisNetwork, redisAddr string) error {
+	redis, err := goredis.Dial(&goredis.DialConfig{Network: redisNetwork, Address: redisAddr})
 	if err != nil {
 		return err
 	}
