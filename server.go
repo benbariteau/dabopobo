@@ -62,5 +62,6 @@ func (s serverConfig) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Write(response)
+		return
 	}
 }
