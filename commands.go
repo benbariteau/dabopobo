@@ -31,19 +31,15 @@ var mutateKarmaCmd = cmd{"(\\(.+\\)|[^ ]+?)(\\+\\++|--+|\\+-|-\\+)", mutateKarma
 
 //handles identifier++
 func mutateKarma(m model, mutations [][]string, username string) (s string, err error) {
-	for _, mutation := range mutations {
-		identifier := maybeRemoveParens(mutation[1])
-		op := mutation[2]
-		if identifier != "" && identifier != username { // users may not mutate themselves
-			suffix := canonicalizeSuffix(op)
-			key := strings.ToLower(identifier) + suffix // canonicalize identifier as lowercase to prevent confusion
-			err = m.incr(key)
-			if err != nil {
-				err = nil
-				return
-			}
-			fmt.Println(key)
+	karmaMutations := filterMutations(mutations, username)
+	for _, mutation := range karmaMutations {
+		key := mutation.key()
+		err = m.incr(key)
+		if err != nil {
+			err = nil
+			return
 		}
+		fmt.Println(key)
 	}
 	return
 }
