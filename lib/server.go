@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/xuyu/goredis"
 )
 
-func serve(port uint16, redisNetwork, redisAddr string) error {
+func Serve(port uint16, redisNetwork, redisAddr string) error {
 	redis, err := goredis.Dial(&goredis.DialConfig{Network: redisNetwork, Address: redisAddr})
 	if err != nil {
 		return err
