@@ -15,5 +15,6 @@ func (k karmaSet) value() int {
 }
 
 func (k karmaSet) String() string {
-	return fmt.Sprintf("(%v++, %v--, %v+-)", k.plusplus, k.minusminus, k.plusminus)
+	ratio := float64(k.plusplus) / float64(k.minusminus)
+	return fmt.Sprintf("(%v++, %v--, %v+-) +/- ratio: %v", k.plusplus, k.minusminus, k.plusminus, ratio)
 }
