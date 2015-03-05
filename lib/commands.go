@@ -44,7 +44,7 @@ func mutateKarma(m model, mutations [][]string, username string) (s string, err 
 	return
 }
 
-var getKarmaCmd = cmd{"^!karma +([^ ].+)", getKarma}
+var getKarmaCmd = cmd{"^!karma +([^ ].*)", getKarma}
 
 //handles !karma identifier
 func getKarma(m model, identifier [][]string, username string) (text string, err error) {
