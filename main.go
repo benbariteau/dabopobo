@@ -9,12 +9,12 @@ import (
 )
 
 var redisAddr = flag.String("redisaddr", "127.0.0.1:6379", "redis backend port")
-var redisNetwork = flag.String("redisnet", "tcp", "redis network (tcp, udp, unix, etc)")
+var slackAccessToken = flag.String("slackToken", "", "Accss token for corresponding slack bot")
 var port = flag.Uint("port", 8080, "port")
 
 func main() {
 	flag.Parse()
-	err := lib.Serve(uint16(*port), *redisNetwork, *redisAddr)
+	err := lib.Serve(uint16(*port), *redisAddr, *slackAccessToken)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
