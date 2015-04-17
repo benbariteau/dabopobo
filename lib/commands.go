@@ -75,6 +75,7 @@ func help(m model, s [][]string, u string) (string, error) {
 var mentionedCmd = cmd{"dabopobo", mentioned}
 
 func mentioned(m model, s [][]string, u string) (string, error) {
+	fmt.Println("don't touch me")
 	return "don't touch me", nil
 }
 
