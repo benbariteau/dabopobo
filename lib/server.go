@@ -8,7 +8,7 @@ import (
 	"github.com/xuyu/goredis"
 )
 
-func Serve(port uint16, redisAddr string, slackToken string) error {
+func Serve(redisAddr string, slackToken string) error {
 	redis, err := goredis.Dial(&goredis.DialConfig{Address: redisAddr})
 	if err != nil {
 		return err
