@@ -23,15 +23,13 @@ func Serve(redisAddr string, slackToken string) error {
 		},
 	}
 
-	rtmHandle(slackToken, s)
-
-	return nil
+	return rtmHandle(slackToken, s)
 }
 
-func rtmHandle(token string, s serverConfig) {
+func rtmHandle(token string, s serverConfig) error {
 	conn, err := rtm.Dial(token)
 	if err != nil {
-		efmt.Fatalln("Unable to connect to slack websocket:", err)
+		return err
 	}
 	defer conn.Close()
 
@@ -56,4 +54,5 @@ func rtmHandle(token string, s serverConfig) {
 			break
 		}
 	}
+	return nil
 }
