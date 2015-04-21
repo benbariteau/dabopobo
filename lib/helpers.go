@@ -20,6 +20,19 @@ func canonicalizeSuffix(suffix string) string {
 	}
 }
 
+func cleanMutation(s string) string {
+	return strings.ToLower(maybeRemoveParens(maybeRemoveAt(s)))
+}
+
+func maybeRemoveAt(s string) string {
+	if s == "" {
+		return s
+	} else if s[0] == '@' {
+		return s[1:]
+	}
+	return s
+}
+
 func maybeRemoveParens(s string) string {
 	if s == "" {
 		return s
@@ -50,7 +63,7 @@ func filterMutations(mutations [][]string, filters ...string) (mutationList []ka
 
 func newKarmaMutation(identifier, op string) karmaMutation {
 	return karmaMutation{
-		identifier: strings.ToLower(maybeRemoveParens(identifier)),
+		identifier: cleanMutation(identifier),
 		op:         canonicalizeSuffix(op),
 	}
 }

@@ -27,7 +27,7 @@ err is non-nil if an error is produced. response should be empty in this case.
 */
 type commandHandler func(m model, submatches [][]string, username string) (response string, err error)
 
-var mutateKarmaCmd = cmd{"(\\(.+\\)|[^ ]+?)(\\+\\++|--+|\\+-|-\\+)", mutateKarma}
+var mutateKarmaCmd = cmd{"(\\(.+\\)|@?[^ ]+?)(\\+\\++|--+|\\+-|-\\+)", mutateKarma}
 
 //handles identifier++
 func mutateKarma(m model, mutations [][]string, username string) (s string, err error) {
