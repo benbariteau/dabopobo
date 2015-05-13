@@ -2,6 +2,7 @@ package lib
 
 import (
 	"regexp"
+	"time"
 
 	"github.com/firba1/slack"
 	"github.com/firba1/slack/rtm"
@@ -9,7 +10,7 @@ import (
 	"github.com/xuyu/goredis"
 )
 
-func Serve(redisAddr string, slackToken string) error {
+func Serve(redisAddr string, slackTokens []string) error {
 	redis, err := goredis.Dial(&goredis.DialConfig{Address: redisAddr})
 	if err != nil {
 		return err
@@ -24,7 +25,13 @@ func Serve(redisAddr string, slackToken string) error {
 		},
 	}
 
-	return rtmHandle(slackToken, s)
+	for _, slackToken := range slackTokens {
+		go rtmHandle(slackToken, s)
+	}
+	for {
+		time.Sleep(5 * time.Minute)
+	}
+	return nil
 }
 
 func rtmHandle(token string, s serverConfig) error {

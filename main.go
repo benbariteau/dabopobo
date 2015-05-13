@@ -26,7 +26,7 @@ func main() {
 
 	err = lib.Serve(
 		conf.Redis.Address,
-		conf.Slack.Token,
+		conf.slackTokens(),
 	)
 	if err != nil {
 		efmt.Fatalln(err)
@@ -34,12 +34,20 @@ func main() {
 }
 
 type config struct {
-	Slack struct {
+	Slack []struct {
+		Name  string
 		Token string
 	}
 	Redis struct {
 		Address string
 	}
+}
+
+func (c config) slackTokens() (tokens []string) {
+	for _, slack := range c.Slack {
+		tokens = append(tokens, slack.Token)
+	}
+	return
 }
 
 func parseConfig(configPath string) (conf config, err error) {
