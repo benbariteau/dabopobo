@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"regexp"
 	"time"
 
@@ -34,32 +35,57 @@ func Serve(redisAddr string, slackTokens []string) error {
 }
 
 func rtmHandle(token string, s serverConfig) error {
+	fmt.Println("rtm start")
 	conn, err := rtm.Dial(token)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
-	messages := conn.MessageChan()
+	fmt.Println("rtm connected")
 
-	for message := range messages {
-		for _, command := range s.commands {
-			r := regexp.MustCompile(command.regex)
-			matches := r.FindAllStringSubmatch(message.Text, -1)
-			if matches == nil {
-				continue
-			}
-			text, err := command.handler(s, matches, "")
-			if err != nil {
-				efmt.Eprintln(err)
-			}
+	events := eventsChannel(conn)
 
-			if text != "" {
-				conn.SendMessage(text, message.Channel)
-			}
-
-			break
+	for event := range events {
+		fmt.Printf("handling %v event\n", event.Type())
+		switch event.(type) {
+		case rtm.Message:
+			e := event.(rtm.Message)
+			fmt.Println("handling message", e)
+			handleMessage(e, conn, s)
 		}
 	}
 	return nil
+}
+
+func handleMessage(message rtm.Message, conn *rtm.Conn, s serverConfig) {
+	for _, command := range s.commands {
+		r := regexp.MustCompile(command.regex)
+		matches := r.FindAllStringSubmatch(message.Text(), -1)
+		if matches == nil {
+			continue
+		}
+		text, err := command.handler(s, matches, "")
+		if err != nil {
+			efmt.Eprintln(err)
+		}
+
+		if text != "" {
+			conn.SendMessage(text, message.Channel())
+		}
+
+		break
+	}
+}
+
+func eventsChannel(conn *rtm.Conn) <-chan rtm.Event {
+	events := make(chan rtm.Event)
+	go func() {
+		for {
+			event := conn.NextEvent()
+			fmt.Println(event.Type(), event)
+			events <- event
+		}
+	}()
+	return events
 }
