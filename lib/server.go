@@ -61,7 +61,7 @@ func rtmHandle(token string, s serverConfig) error {
 func handleMessage(message rtm.Message, conn *rtm.Conn, s serverConfig) {
 	for _, command := range s.commands {
 		r := regexp.MustCompile(command.regex)
-		matches := r.FindAllStringSubmatch(message.Text(), -1)
+		matches := r.FindAllStringSubmatch(conn.UnescapeMessage(message.Text()), -1)
 		if matches == nil {
 			continue
 		}
