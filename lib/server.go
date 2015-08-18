@@ -65,7 +65,7 @@ func handleMessage(message rtm.Message, conn *rtm.Conn, s serverConfig) {
 		if matches == nil {
 			continue
 		}
-		text, err := command.handler(s, matches, "")
+		text, err := command.handler(s, matches, conn.UserInfo(message.User()).Name)
 		if err != nil {
 			efmt.Eprintln(err)
 		}
