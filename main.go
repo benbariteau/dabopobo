@@ -2,12 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
 
-	"github.com/firba1/util/efmt"
 	"github.com/naoina/toml"
 
 	"github.com/firba1/dabopobo/lib"
@@ -21,7 +21,8 @@ func main() {
 	flag.Parse()
 	conf, err := parseConfig(*configPath)
 	if err != nil {
-		efmt.Fatalln("Error loading configuration:", err)
+		fmt.Fprintln(os.Stderr, "Error loading configuration:", err)
+		os.Exit(1)
 	}
 
 	err = lib.Serve(
@@ -29,7 +30,8 @@ func main() {
 		conf.slackTokens(),
 	)
 	if err != nil {
-		efmt.Fatalln(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 

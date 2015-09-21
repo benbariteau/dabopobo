@@ -2,11 +2,11 @@ package lib
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"time"
 
 	"github.com/firba1/slack/rtm"
-	"github.com/firba1/util/efmt"
 	"github.com/xuyu/goredis"
 )
 
@@ -67,7 +67,7 @@ func handleMessage(message rtm.Message, conn *rtm.Conn, s serverConfig) {
 		}
 		text, err := command.handler(s, matches, conn.UserInfo(message.User()).Name)
 		if err != nil {
-			efmt.Eprintln(err)
+			fmt.Fprintln(os.Stderr, err)
 		}
 
 		if text != "" {
