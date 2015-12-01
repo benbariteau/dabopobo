@@ -35,27 +35,50 @@ func Serve(redisAddr string, slackTokens []string) error {
 }
 
 func rtmHandle(token string, s serverConfig) error {
-	fmt.Println("rtm start")
-	conn, err := rtm.Dial(token)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	fmt.Println("rtm connected")
-
-	events := eventsChannel(conn)
-
-	for event := range events {
-		fmt.Printf("handling %v event\n", event.Type())
-		switch event.(type) {
-		case rtm.Message:
-			e := event.(rtm.Message)
-			fmt.Println("handling message", e)
-			handleMessage(e, conn, s)
+	for {
+		fmt.Println("rtm start")
+		conn, err := rtm.Dial(token)
+		if err != nil {
+			continue
 		}
+		defer conn.Close()
+
+		fmt.Println("rtm connected")
+
+		rtmHelper(conn, s)
+		fmt.Println("attempting rtm reconnect")
 	}
 	return nil
+}
+
+func rtmHelper(conn *rtm.Conn, s serverConfig) {
+	events := eventsChannel(conn)
+	ticker := time.Tick(10 * time.Minute)
+
+	eventHandledRecently := true
+	for {
+		select {
+		case event := <-events:
+			handleEvent(event, conn, s)
+			eventHandledRecently = true
+		case <-ticker:
+			if eventHandledRecently {
+				eventHandledRecently = false
+			} else {
+				return
+			}
+		}
+	}
+}
+
+func handleEvent(event rtm.Event, conn *rtm.Conn, s serverConfig) {
+	fmt.Printf("handling %v event\n", event.Type())
+	switch event.(type) {
+	case rtm.Message:
+		e := event.(rtm.Message)
+		fmt.Println("handling message", e)
+		handleMessage(e, conn, s)
+	}
 }
 
 func handleMessage(message rtm.Message, conn *rtm.Conn, s serverConfig) {
