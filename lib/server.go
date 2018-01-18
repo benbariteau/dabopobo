@@ -1,32 +1,33 @@
 package lib
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"regexp"
 	"time"
 
 	"github.com/firba1/slack/rtm"
-	"github.com/xuyu/goredis"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func Serve(redisAddr string, slackTokens []string) error {
-	redis, err := goredis.Dial(&goredis.DialConfig{Address: redisAddr})
+	commands := []cmd{
+		getKarmaCmd,
+		helpCmd,        // must be after getKarma since its regex matches anything that getKarma's does
+		mutateKarmaCmd, // must be after getKarma because getKarma could be given an identifier that matches
+		mentionedCmd,
+	}
+	db, err := sql.Open("sqlite3", "./dabopobo.db")
 	if err != nil {
 		return err
 	}
-	s := serverConfig{
-		redis,
-		[]cmd{
-			getKarmaCmd,
-			helpCmd,        // must be after getKarma since its regex matches anything that getKarma's does
-			mutateKarmaCmd, // must be after getKarma because getKarma could be given an identifier that matches
-			mentionedCmd,
-		},
+	s := sqliteBackend{
+		db: db,
 	}
 
 	for _, slackToken := range slackTokens {
-		go rtmHandle(slackToken, s)
+		go rtmHandle(slackToken, commands, s)
 	}
 	for {
 		time.Sleep(5 * time.Minute)
@@ -34,7 +35,7 @@ func Serve(redisAddr string, slackTokens []string) error {
 	return nil
 }
 
-func rtmHandle(token string, s serverConfig) error {
+func rtmHandle(token string, commands []cmd, m model) error {
 	for {
 		fmt.Println("rtm start")
 		conn, err := rtm.Dial(token)
@@ -45,13 +46,13 @@ func rtmHandle(token string, s serverConfig) error {
 
 		fmt.Println("rtm connected")
 
-		rtmHelper(conn, s)
+		rtmHelper(conn, commands, m)
 		fmt.Println("attempting rtm reconnect")
 	}
 	return nil
 }
 
-func rtmHelper(conn *rtm.Conn, s serverConfig) {
+func rtmHelper(conn *rtm.Conn, commands []cmd, m model) {
 	events := eventsChannel(conn)
 	ticker := time.Tick(10 * time.Minute)
 
@@ -59,7 +60,7 @@ func rtmHelper(conn *rtm.Conn, s serverConfig) {
 	for {
 		select {
 		case event := <-events:
-			handleEvent(event, conn, s)
+			handleEvent(event, conn, commands, m)
 			eventHandledRecently = true
 		case <-ticker:
 			if eventHandledRecently {
@@ -71,24 +72,24 @@ func rtmHelper(conn *rtm.Conn, s serverConfig) {
 	}
 }
 
-func handleEvent(event rtm.Event, conn *rtm.Conn, s serverConfig) {
+func handleEvent(event rtm.Event, conn *rtm.Conn, commands []cmd, m model) {
 	fmt.Printf("handling %v event\n", event.Type())
 	switch event.(type) {
 	case rtm.Message:
 		e := event.(rtm.Message)
 		fmt.Println("handling message", e)
-		handleMessage(e, conn, s)
+		handleMessage(e, conn, commands, m)
 	}
 }
 
-func handleMessage(message rtm.Message, conn *rtm.Conn, s serverConfig) {
-	for _, command := range s.commands {
+func handleMessage(message rtm.Message, conn *rtm.Conn, commands []cmd, m model) {
+	for _, command := range commands {
 		r := regexp.MustCompile(command.regex)
 		matches := r.FindAllStringSubmatch(conn.UnescapeMessage(message.Text()), -1)
 		if matches == nil {
 			continue
 		}
-		text, err := command.handler(s, matches, conn.UserInfo(message.User()).Name)
+		text, err := command.handler(m, matches, conn.UserInfo(message.User()).Name)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}

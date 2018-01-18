@@ -1,32 +1,88 @@
 package lib
 
 import (
-	"github.com/xuyu/goredis"
-	"strconv"
+	"database/sql"
 )
 
-// serverConfig implements the model interface, allowing for testablity
-type serverConfig struct {
-	redis    *goredis.Redis // redis is the redis backend for dabopobo
-	commands []cmd          // commmands is a list of cmds in order of precedence, that are available
+type sqliteBackend struct {
+	db *sql.DB
 }
 
-func (s serverConfig) incr(key string) error {
-	_, err := s.redis.Incr(key)
-	return err
+var opToColumn = map[string]string{
+	"++": "plusplus",
+	"--": "minusminus",
+	"+-": "plusminus",
 }
 
-// gets an int value from redis and returns zero if any errors occur (missing key, not an int, etc)
-func (s serverConfig) getInt(key string) int {
-	val, err := s.redis.Get(key)
+func (s sqliteBackend) incr(key string) (err error) {
+	identifier, operation := key[:len(key)-2], key[len(key)-2:]
+
+	txn, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func(txn *sql.Tx) {
+		if err != nil {
+			txn.Rollback()
+		}
+	}(txn)
+
+	statement := "UPDATE karma SET " + opToColumn[operation] + "=" + opToColumn[operation] + " + 1 WHERE identifier = ?"
+	stmt, err := txn.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	result, err := stmt.Exec(identifier)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	// successful update
+	if rows == 1 {
+		txn.Commit()
+		return nil
+	}
+
+	plusplus := 0
+	minusminus := 0
+	plusminus := 0
+	switch operation {
+	case "++":
+		plusplus += 1
+	case "--":
+		minusminus += 1
+	case "+-":
+		plusminus += 1
+	}
+
+	stmt, err = txn.Prepare("INSERT INTO karma (identifier, plusplus, minusminus, plusminus) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	result, err = stmt.Exec(identifier, plusplus, minusminus, plusminus)
+	if err != nil {
+		return err
+	}
+	txn.Commit()
+	return nil
+}
+
+func (s sqliteBackend) getInt(key string) (value int) {
+	identifier, operation := key[:len(key)-2], key[len(key)-2:]
+
+	stmt, err := s.db.Prepare("SELECT " + opToColumn[operation] + " FROM karma WHERE identifier = ?")
+	if err != nil {
+		panic(err)
+	}
+	err = stmt.QueryRow(identifier).Scan(&value)
 	if err != nil {
 		return 0
 	}
-
-	value, err := strconv.Atoi(string(val))
-	if err != nil {
-		return 0
-	}
-
 	return value
 }
