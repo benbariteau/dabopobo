@@ -82,10 +82,27 @@ func handleEvent(event rtm.Event, conn *rtm.Conn, commands []cmd, m model) {
 	}
 }
 
+func postprocessUser(userString string) string {
+	// string leading "@"
+	userString = userString[1:]
+
+	// wrap in parens so that it gets treated as a single unit for karma purposes, even if it has spaces
+	return "(" + userString + ")"
+}
+
+func postprocessLink(unescapedString string, escapeType rtm.EscapeType) string {
+	if escapeType != rtm.UserEscape {
+		return unescapedString
+	}
+
+	return postprocessUser(unescapedString)
+}
+
 func handleMessage(message rtm.Message, conn *rtm.Conn, commands []cmd, m model) {
 	for _, command := range commands {
 		r := regexp.MustCompile(command.regex)
-		matches := r.FindAllStringSubmatch(conn.UnescapeMessage(message.Text()), -1)
+		unescapedText := conn.UnescapeMessagePostprocess(message.Text(), postprocessLink)
+		matches := r.FindAllStringSubmatch(unescapedText, -1)
 		if matches == nil {
 			continue
 		}
