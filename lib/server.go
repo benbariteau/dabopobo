@@ -106,7 +106,7 @@ func handleMessage(message rtm.Message, conn *rtm.Conn, commands []cmd, m model)
 		if matches == nil {
 			continue
 		}
-		text, err := command.handler(m, matches, conn.UserInfo(message.User()).Name)
+		text, err := command.handler(m, matches, conn.UserInfo(message.User()).Profile.DisplayName)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
