@@ -45,6 +45,7 @@ func mutateKarma(m model, mutations [][]string, username string) (s string, err 
 	return
 }
 
+var rawGetKarmaCmd = cmd{`^!karma\s+\((.*)\)`, getKarma}
 var getKarmaCmd = cmd{"^!karma +([^ ].*)", getKarma}
 
 //handles !karma identifier
@@ -62,11 +63,12 @@ func help(m model, s [][]string, u string) (string, error) {
 	fmt.Println("help message")
 	return strings.Join(
 		[]string{
-			"!karma thing\tdisplays things karma. It can be anything, including with spaces.",
 			"thing++\t(with at least 2 pluses) gives positive karma",
 			"thing--\t(with at least 2 minuses) gives negative karma",
 			"thing+-\t(either order) gives neutral karma",
-			"(thing with spaces)++\t(with any of the above) gives karma to a thing with spaces in it.",
+			"(thing with spaces)++\t(with any of the above) gives karma to a thing with spaces in it",
+			"!karma thing\tdisplays things karma. It can be anything, including with spaces in the middle",
+			"!karma (any string )\tdisplays karma for \"any string \", may include trailng spaces",
 			"!karma or !karmahelp\tdisplays this help",
 		},
 		"\n",

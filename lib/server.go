@@ -13,6 +13,7 @@ import (
 
 func Serve(redisAddr string, slackTokens []string) error {
 	commands := []cmd{
+		rawGetKarmaCmd,
 		getKarmaCmd,
 		helpCmd,        // must be after getKarma since its regex matches anything that getKarma's does
 		mutateKarmaCmd, // must be after getKarma because getKarma could be given an identifier that matches
@@ -107,6 +108,7 @@ func handleMessage(message rtm.Message, conn *rtm.Conn, commands []cmd, m model)
 		if matches == nil {
 			continue
 		}
+		fmt.Printf("matched with %v\n", command)
 		text, err := command.handler(m, matches, conn.UserInfo(message.User()).Profile.DisplayName)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
