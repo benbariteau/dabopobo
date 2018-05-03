@@ -16,6 +16,7 @@ func Serve(redisAddr string, slackTokens []string) error {
 		getKarmaCmd,
 		helpCmd,        // must be after getKarma since its regex matches anything that getKarma's does
 		mutateKarmaCmd, // must be after getKarma because getKarma could be given an identifier that matches
+		singleMessageKarmaMutate,
 		mentionedCmd,
 	}
 	db, err := sql.Open("sqlite3", "./dabopobo.db")
