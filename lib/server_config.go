@@ -2,6 +2,7 @@ package lib
 
 import (
 	"database/sql"
+	"time"
 )
 
 type sqliteBackend struct {
@@ -84,12 +85,14 @@ func (s sqliteBackend) addChannelKarma(mutation karmaMutation, channel string) (
 		}
 	}(txn)
 
-	statement := "UPDATE channel_karma SET " + opToColumn[mutation.op] + "=" + opToColumn[mutation.op] + " + 1 WHERE identifier = ? AND channel = ?"
+	dateBucket := time.Now().Format("2006-01-02")
+
+	statement := "UPDATE channel_karma SET " + opToColumn[mutation.op] + "=" + opToColumn[mutation.op] + " + 1 WHERE identifier = ? AND channel = ? AND date_bucket = ?"
 	stmt, err := txn.Prepare(statement)
 	if err != nil {
 		return err
 	}
-	result, err := stmt.Exec(mutation.identifier, channel)
+	result, err := stmt.Exec(mutation.identifier, channel, dateBucket)
 	if err != nil {
 		return err
 	}
@@ -118,11 +121,18 @@ func (s sqliteBackend) addChannelKarma(mutation karmaMutation, channel string) (
 		plusminus += 1
 	}
 
-	stmt, err = txn.Prepare("INSERT INTO channel_karma (identifier, plusplus, minusminus, plusminus, channel) VALUES (?, ?, ?, ?, ?)")
+	stmt, err = txn.Prepare("INSERT INTO channel_karma (identifier, channel, date_bucket, plusplus, minusminus, plusminus) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
-	result, err = stmt.Exec(mutation.identifier, plusplus, minusminus, plusminus, channel)
+	result, err = stmt.Exec(
+		mutation.identifier,
+		channel,
+		dateBucket,
+		plusplus,
+		minusminus,
+		plusminus,
+	)
 	if err != nil {
 		return err
 	}
@@ -130,6 +140,7 @@ func (s sqliteBackend) addChannelKarma(mutation karmaMutation, channel string) (
 	return nil
 }
 
+// TODO use channel_karma for this
 func (s sqliteBackend) getInt(key string) (value int) {
 	identifier, operation := key[:len(key)-2], key[len(key)-2:]
 
