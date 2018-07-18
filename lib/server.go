@@ -109,7 +109,7 @@ func handleMessage(message rtm.Message, conn *rtm.Conn, commands []cmd, m model)
 			continue
 		}
 		fmt.Printf("matched with %v\n", command)
-		text, err := command.handler(m, matches, conn.UserInfo(message.User()).Profile.DisplayName)
+		text, err := command.handler(m, matches, conn.UserInfo(message.User()).Profile.DisplayName, message.Channel())
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}

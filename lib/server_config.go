@@ -73,6 +73,63 @@ func (s sqliteBackend) incr(key string) (err error) {
 	return nil
 }
 
+func (s sqliteBackend) addChannelKarma(mutation karmaMutation, channel string) (err error) {
+	txn, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func(txn *sql.Tx) {
+		if err != nil {
+			txn.Rollback()
+		}
+	}(txn)
+
+	statement := "UPDATE channel_karma SET " + opToColumn[mutation.op] + "=" + opToColumn[mutation.op] + " + 1 WHERE identifier = ? AND channel = ?"
+	stmt, err := txn.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	result, err := stmt.Exec(mutation.identifier, channel)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	// successful update
+	if rows == 1 {
+		txn.Commit()
+		return nil
+	}
+
+	plusplus := 0
+	minusminus := 0
+	plusminus := 0
+	switch mutation.op {
+	case "++":
+		plusplus += 1
+	case "--":
+		minusminus += 1
+	case "+-":
+		plusminus += 1
+	}
+
+	stmt, err = txn.Prepare("INSERT INTO channel_karma (identifier, plusplus, minusminus, plusminus, channel) VALUES (?, ?, ?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	result, err = stmt.Exec(mutation.identifier, plusplus, minusminus, plusminus, channel)
+	if err != nil {
+		return err
+	}
+	txn.Commit()
+	return nil
+}
+
 func (s sqliteBackend) getInt(key string) (value int) {
 	identifier, operation := key[:len(key)-2], key[len(key)-2:]
 
