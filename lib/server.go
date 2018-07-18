@@ -19,6 +19,7 @@ func Serve(redisAddr string, slackTokens []string) error {
 		mutateKarmaCmd, // must be after getKarma because getKarma could be given an identifier that matches
 		singleMessageKarmaMutate,
 		mentionedCmd,
+		leaderboardCmd,
 	}
 	db, err := sql.Open("sqlite3", "./dabopobo.db")
 	if err != nil {

@@ -3,12 +3,14 @@ package lib
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 type model interface {
 	incr(key string) error                                        //increment the given key, setting it to zero if it doesn't exist
 	getInt(key string) int                                        //get a key as an int, defaulting to 0 if it doesn't exist
 	addChannelKarma(mutation karmaMutation, channel string) error // apply given karma mutation to channel
+	getChannelTop3(channel string, dateLimit string) []karmaWithId
 }
 
 // a dabopobo command, consisting of a regex to match against and a commandHandler to run if it matches
@@ -76,6 +78,7 @@ func help(m model, s [][]string, u string, channel string) (string, error) {
 			"!karma thing\tdisplays things karma. It can be anything, including with spaces in the middle",
 			"!karma (any string )\tdisplays karma for \"any string \", may include trailng spaces",
 			"!karma or !karmahelp\tdisplays this help",
+			"!karma-leaderboard\tdisplays top 3 karma scores in the last 30 days in the current channel",
 		},
 		"\n",
 	), nil
@@ -86,6 +89,20 @@ var mentionedCmd = cmd{"dabopobo", mentioned}
 func mentioned(m model, s [][]string, u string, channel string) (string, error) {
 	fmt.Println("don't touch me")
 	return "don't touch me", nil
+}
+
+var leaderboardCmd = cmd{"^!karma[_-]?leaderboard$", leaderboard}
+
+func leaderboard(m model, matches [][]string, user string, channel string) (string, error) {
+	karmaList := m.getChannelTop3(channel, time.Now().AddDate(0, 0, -30).Format("2006-01-02"))
+
+	// TODO include channel name
+	lines := "Top 3 karma recipients in this channel for the last 30 days:"
+	for i, karma := range karmaList {
+		line := fmt.Sprintf("#%v: %v: %v %v", i+1, karma.identifier, karma.karma.value(), karma.karma.breakdown())
+		lines = fmt.Sprintf("%v\n%v", lines, line)
+	}
+	return lines, nil
 }
 
 // getKarmaSet loads the karma for a given key

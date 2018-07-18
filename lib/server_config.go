@@ -154,3 +154,33 @@ func (s sqliteBackend) getInt(key string) (value int) {
 	}
 	return value
 }
+
+type karmaWithId struct {
+	identifier string
+	karma      karmaSet
+}
+
+func (s sqliteBackend) getChannelTop3(channel string, minimumDate string) (karmaList []karmaWithId) {
+	stmt, err := s.db.Prepare("SELECT identifier, SUM(plusplus) as plusplus_sum, SUM(minusminus) as minusminus_sum, SUM(plusminus) FROM channel_karma WHERE channel = ? AND date_bucket > ? GROUP BY identifier ORDER BY (plusplus_sum - minusminus_sum) DESC LIMIT 3")
+	if err != nil {
+		panic(err)
+	}
+	rows, err := stmt.Query(channel, minimumDate)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var karma karmaWithId
+		if err := rows.Scan(&karma.identifier, &karma.karma.plusplus, &karma.karma.minusminus, &karma.karma.plusminus); err != nil {
+			panic(err)
+		}
+		karmaList = append(karmaList, karma)
+	}
+	if err := rows.Err(); err != nil {
+		panic(err)
+	}
+
+	return karmaList
+}
