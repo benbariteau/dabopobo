@@ -91,7 +91,7 @@ func mentioned(m model, s [][]string, u string, channel string) (string, error) 
 	return "don't touch me", nil
 }
 
-var leaderboardCmd = cmd{"^!karma[_-]?leaderboard$", leaderboard}
+var leaderboardCmd = cmd{"^!karma[_-]?(leader)?board$", leaderboard}
 
 func leaderboard(m model, matches [][]string, user string, channel string) (string, error) {
 	karmaList := m.getChannelTop3(channel, time.Now().AddDate(0, 0, -30).Format("2006-01-02"))
