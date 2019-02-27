@@ -26,7 +26,6 @@ func main() {
 	}
 
 	err = lib.Serve(
-		conf.Redis.Address,
 		conf.slackTokens(),
 	)
 	if err != nil {
@@ -39,9 +38,6 @@ type config struct {
 	Slack []struct {
 		Name  string
 		Token string
-	}
-	Redis struct {
-		Address string
 	}
 }
 

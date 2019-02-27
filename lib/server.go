@@ -11,7 +11,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func Serve(redisAddr string, slackTokens []string) error {
+func Serve(slackTokens []string) error {
 	commands := []cmd{
 		rawGetKarmaCmd,
 		getKarmaCmd,
