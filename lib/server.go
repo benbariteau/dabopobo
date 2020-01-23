@@ -102,6 +102,11 @@ func postprocessLink(unescapedString string, escapeType rtm.EscapeType) string {
 }
 
 func handleMessage(message rtm.Message, conn *rtm.Conn, commands []cmd, m model) {
+	// ignore bot messages
+	if message.Subtype() == "bot_message" || message.Subtype() == "slackbot_response" {
+		fmt.Println("Skipping bot message", message)
+		return
+	}
 	for _, command := range commands {
 		r := regexp.MustCompile(command.regex)
 		unescapedText := conn.UnescapeMessagePostprocess(message.Text(), postprocessLink)
