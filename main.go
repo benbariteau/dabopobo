@@ -10,7 +10,7 @@ import (
 
 	"github.com/naoina/toml"
 
-	"github.com/firba1/dabopobo/lib"
+	"github.com/benbariteau/dabopobo/lib"
 )
 
 var configPath = flag.String("config", "", "Configuration file for dabopobo")

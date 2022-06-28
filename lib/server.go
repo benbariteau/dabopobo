@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/firba1/slack/rtm"
+	"github.com/benbariteau/slack/rtm"
 	_ "github.com/mattn/go-sqlite3"
 )
 
