@@ -1,4 +1,4 @@
-package lib
+package main
 
 import (
 	"database/sql"
@@ -44,6 +44,7 @@ func rtmHandle(token string, commands []cmd, m model) error {
 		fmt.Println("rtm start")
 		conn, err := rtm.Dial(token)
 		if err != nil {
+			fmt.Println(err)
 			continue
 		}
 		defer conn.Close()

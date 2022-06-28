@@ -1,11 +1,6 @@
-github.com/benbariteau/dabopobo/lib v0.0.0-20220628040233-e1c196db4178 h1:NIxdHtlt28NXe4ZFFfIC2BTES4LIe4ATKctb2Tv7O6w=
-github.com/benbariteau/dabopobo/lib v0.0.0-20220628040233-e1c196db4178/go.mod h1:eBiT0qBcK+F+9mEI1VVg3VsQhUEmqW1e0vIat+4STNc=
-github.com/benbariteau/slack v0.3.0 h1:MW7Zmh+AWd+MPDGBXV4qKQodoi+4KWfFyVq69vRmQ9g=
-github.com/benbariteau/slack v0.3.0/go.mod h1:fHXcNdKH5NgShW5yK0JQ805PIlVeWY/BaRuuV7e3Cns=
+github.com/benbariteau/slack v1.0.5 h1:1vy8KQxHD5Pl+1FuADLiRqKxTaErfU1Oy6B36++rx78=
+github.com/benbariteau/slack v1.0.5/go.mod h1:WoHVGnf9gXhEjS9nstKtYHvIV5pb4z3nJKrAtyOCq1I=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
-github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/firba1/slack v0.3.0 h1:0JmEH1L/kMdlirkDFhgF9/OxiCZX87UW0MrIAkCBZBw=
-github.com/firba1/slack v0.3.0/go.mod h1:9hM+ADVS0Kl+ptbiBQbPKd87eFm9eN78A4VEc5eduew=
 github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWmnc=
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0SNc=
@@ -17,8 +12,5 @@ github.com/naoina/go-stringutil v0.1.0/go.mod h1:XJ2SJL9jCtBh+P9q5btrd/Ylo8XwT/h
 github.com/naoina/toml v0.1.1 h1:PT/lllxVVN0gzzSqSlHEmP8MJB4MY2U7STGxiouV4X8=
 github.com/naoina/toml v0.1.1/go.mod h1:NBIhNtsFMo3G2szEBne+bO4gS192HuIYRqfvOWb4i1E=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
-github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.7.5 h1:s5PTfem8p8EbKQOctVV53k6jCJt3UX4IEJzwh+C324Q=
-gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
-gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=

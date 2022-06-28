@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/naoina/toml"
-
-	"github.com/benbariteau/dabopobo/lib"
 )
 
 var configPath = flag.String("config", "", "Configuration file for dabopobo")
@@ -25,7 +23,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = lib.Serve(
+	err = Serve(
 		conf.slackTokens(),
 	)
 	if err != nil {
