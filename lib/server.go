@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/benbariteau/slack"
 	"github.com/benbariteau/slack/rtm"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -115,7 +116,8 @@ func handleMessage(message rtm.Message, conn *rtm.Conn, commands []cmd, m model)
 			continue
 		}
 		fmt.Printf("matched with %v\n", command)
-		text, err := command.handler(m, matches, conn.UserInfo(message.User()).Profile.DisplayName, message.Channel())
+		user, _ := slack.NewAPI(conn.Token).UsersInfo(message.User())
+		text, err := command.handler(m, matches, user.Profile.DisplayName, message.Channel())
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
